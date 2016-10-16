@@ -34,6 +34,7 @@ class acf_field_random_color extends acf_field {
 			// add default here to merge into your field. 
 			// This makes life easy when creating the field options as you don't need to use any if( isset('') ) logic. eg:
 			//'preview_size' => 'thumbnail'
+            'default_value'	=>	'#333333',
 		);
 		
 		
@@ -73,28 +74,23 @@ class acf_field_random_color extends acf_field {
 		
 		// Create Field Options HTML
 		?>
-<tr class="field_option field_option_<?php echo $this->name; ?>">
-	<td class="label">
-		<label><?php _e("Preview Size",'acf'); ?></label>
-		<p class="description"><?php _e("Thumbnail is advised",'acf'); ?></p>
-	</td>
-	<td>
-		<?php
-		
-		do_action('acf/create_field', array(
-			'type'		=>	'radio',
-			'name'		=>	'fields['.$key.'][preview_size]',
-			'value'		=>	$field['preview_size'],
-			'layout'	=>	'horizontal',
-			'choices'	=>	array(
-				'thumbnail' => __('Thumbnail'),
-				'something_else' => __('Something Else'),
-			)
-		));
-		
-		?>
-	</td>
-</tr>
+        <tr class="field_option field_option_<?php echo $this->name; ?>">
+            <td class="label">
+                <label><?php _e("Default",'acf'); ?></label>
+                <p class="description"><?php _e("Include the # for the hex color",'acf'); ?></p>
+            </td>
+            <td>
+                <?php
+
+                do_action('acf/create_field', array(
+                    'type'		=>	'text',
+                    'name'		=>	'fields['.$key.'][random_color]',
+                    'value'		=>	$field['default_value'],
+                ));
+
+                ?>
+            </td>
+        </tr>
 		<?php
 		
 	}
@@ -124,9 +120,97 @@ class acf_field_random_color extends acf_field {
 		
 		// create Field HTML
 		?>
-		<div>
-			
+		<div id="rn-color" style="color: #F9F9F9">
+           <pre style="color:#333"><?php print_r($field); ?></pre>
+            <input id="spec" type="text">
+            <input name="<?php echo $field['name']; ?>" type="hidden" value="<?php echo $field['value']; ?>">
+            <input id="rn" class="button" type="button" value="Random Color" style="height: 33px">
 		</div>
+		<script type="text/javascript">
+            (function($) {
+                function getRandomColor() {
+                    var letters = '01234ABCDEF';
+                    var color = '#';
+                    for (var i = 0; i < 6; i++ ) {
+                        color += letters[Math.floor(Math.random() * 11)];
+                    }
+
+                    if (tinycolor(color).isDark()) {
+                        console.log(color + ' is too dark');
+                        color = tinycolor(color).lighten(20).toString();
+                        return color
+                    } else {
+                        return color
+                    }
+                }
+                var saved = '<?php echo $field['value']; ?>';
+                if (saved == '#333333' || saved == '#333') {
+//                    $('#rn').attr('disabled', true);
+                } else {
+                    $('#rn').attr('disabled', false);
+                }
+                
+                $('#rn-color .button').on('click', function(){
+                    $('#spec').spectrum({
+                        color: getRandomColor(),
+                        showInput: true,
+                        allowEmpty: false,
+                        className: "piece-spectrum",
+                        showInitial: true,
+                        preferredFormat: "hex",
+                        chooseText: "Confirm",
+                        cancelText: "Dismiss",
+                        change: function(color) {
+                            var new_color = color.toHexString().toUpperCase();
+                            console.log(getRandomColor());
+                            console.log(new_color);
+                            if (new_color == '#333333' || new_color == '#333') {
+//                    $('#rn').attr('disabled', true);
+                } else {
+                    $('#rn').attr('disabled', false);
+                }
+                            alert('woah7');
+                        }
+                    });
+                    
+                    $('.piece-spectrum').addClass('button');
+                    $('.piece-spectrum').css('height', '33px');
+                    $('.sp-container').css('height', 'auto');
+                    $('.sp-picker-container').css('border', 'none');
+                    $('.sp-replacer.sp-light.piece-spectrum.button > *').css('line-height', '26px');
+                    $('.sp-preview').css('margin-top', '5px');
+                });
+                
+                $('#spec').spectrum({
+                        color: '<?php echo $field['value']; ?>',
+                        showInput: true,
+                        allowEmpty: false,
+                        className: "piece-spectrum",
+                        showInitial: true,
+                        preferredFormat: "hex",
+                        chooseText: "Confirm",
+                        cancelText: "Dismiss",
+                        change: function(color) {
+                            var new_color = color.toHexString().toUpperCase();
+                            console.log(getRandomColor());
+                            console.log(new_color);
+                            if (new_color != '#333333' || new_color != '#333') {
+                                $('#rn').attr('disabled', true);
+                            } else {
+                                $('#rn').attr('disabled', false);
+                            }
+                            alert('woah');
+                        }
+                });
+                
+                $('.piece-spectrum').addClass('button');
+                $('.piece-spectrum').css('height', '33px');
+                $('.sp-container').css('height', 'auto');
+                $('.sp-picker-container').css('border', 'none');
+                $('.sp-replacer.sp-light.piece-spectrum.button > *').css('line-height', '26px');
+                $('.sp-preview').css('margin-top', '5px');
+            })(jQuery);
+        </script>
 		<?php
 	}
 	
@@ -154,71 +238,22 @@ class acf_field_random_color extends acf_field {
 		
 		
 		// register & include JS
-		wp_register_script( 'acf-input-random_color', "{$url}assets/js/input.js", array('acf-input'), $version );
+		wp_register_script( 'jquery', "https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js", false, null );
+		wp_enqueue_script('jquery');
+		wp_register_script( 'tinycolor', "{$url}assets/js/tinycolor-min.js", array('acf-input'), $version );
+		wp_enqueue_script('tinycolor');
+		wp_register_script( 'acf-input-random_color', "{$url}assets/js/spectrum.js", array('acf-input'), $version );
 		wp_enqueue_script('acf-input-random_color');
 		
 		
 		// register & include CSS
-		wp_register_style( 'acf-input-random_color', "{$url}assets/css/input.css", array('acf-input'), $version );
+		wp_register_style( 'acf-input-random_color', "{$url}assets/css/spectrum.css", array('acf-input'), $version );
 		wp_enqueue_style('acf-input-random_color');
 		
 	}
 	
 	
-	/*
-	*  input_admin_head()
-	*
-	*  This action is called in the admin_head action on the edit screen where your field is created.
-	*  Use this action to add CSS and JavaScript to assist your create_field() action.
-	*
-	*  @info	http://codex.wordpress.org/Plugin_API/Action_Reference/admin_head
-	*  @type	action
-	*  @since	3.6
-	*  @date	23/01/13
-	*/
-
-	function input_admin_head()
-	{
-		// Note: This function can be removed if not used
-	}
 	
-	
-	/*
-	*  field_group_admin_enqueue_scripts()
-	*
-	*  This action is called in the admin_enqueue_scripts action on the edit screen where your field is edited.
-	*  Use this action to add CSS + JavaScript to assist your create_field_options() action.
-	*
-	*  $info	http://codex.wordpress.org/Plugin_API/Action_Reference/admin_enqueue_scripts
-	*  @type	action
-	*  @since	3.6
-	*  @date	23/01/13
-	*/
-
-	function field_group_admin_enqueue_scripts()
-	{
-		// Note: This function can be removed if not used
-	}
-
-	
-	/*
-	*  field_group_admin_head()
-	*
-	*  This action is called in the admin_head action on the edit screen where your field is edited.
-	*  Use this action to add CSS and JavaScript to assist your create_field_options() action.
-	*
-	*  @info	http://codex.wordpress.org/Plugin_API/Action_Reference/admin_head
-	*  @type	action
-	*  @since	3.6
-	*  @date	23/01/13
-	*/
-
-	function field_group_admin_head()
-	{
-		// Note: This function can be removed if not used
-	}
-
-
 	/*
 	*  load_value()
 	*
