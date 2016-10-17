@@ -7,7 +7,6 @@ A custom Advanced Custom Fields option that enables you to generate a beautiful 
 ### Description
 
 A custom Advanced Custom Fields option that enables you to generate a beautiful color randomly.
----ADD HOW TO USE HERE---
 
 ### Compatibility
 

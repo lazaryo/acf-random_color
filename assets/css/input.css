@@ -1,0 +1,23 @@
+.piece-spectrum, #rn, .sp-replacer.button {
+    height: 33px;
+}
+
+.sp-container {
+    height: auto !important;
+}
+
+.sp-picker-container {
+    border: none !important;
+}
+
+.sp-replacer.sp-light.piece-spectrum.button > * {
+    line-height: 26px;
+}
+
+.sp-preview {
+    margin-top: 5px;
+}
+
+#pre {
+    display: none;
+}

@@ -31,9 +31,6 @@ class acf_field_random_color extends acf_field {
 		$this->label = __('Random Color');
 		$this->category = __("Basic",'acf'); // Basic, Content, Choice, etc
 		$this->defaults = array(
-			// add default here to merge into your field. 
-			// This makes life easy when creating the field options as you don't need to use any if( isset('') ) logic. eg:
-			//'preview_size' => 'thumbnail'
             'default_value'	=>	'#333333',
 		);
 		
@@ -110,24 +107,19 @@ class acf_field_random_color extends acf_field {
 	
 	function create_field( $field )
 	{
-		// defaults?
-		/*
-		$field = array_merge($this->defaults, $field);
-		*/
-		
-		// perhaps use $field['preview_size'] to alter the markup?
-		
-		
 		// create Field HTML
 		?>
 		<div id="rn-color" style="color: #F9F9F9">
            <pre style="color:#333"><?php print_r($field); ?></pre>
             <input id="spec" type="text">
             <input name="<?php echo $field['name']; ?>" type="hidden" value="<?php echo $field['value']; ?>">
-            <input id="rn" class="button" type="button" value="Random Color" style="height: 33px">
+            <input id="rn" class="button" type="button" value="Random Color">
 		</div>
 		<script type="text/javascript">
             (function($) {
+                
+                // generate a random color and return it
+                // add or remove charcters to further diversify the colors
                 function getRandomColor() {
                     var letters = '01234ABCDEF';
                     var color = '#';
@@ -136,20 +128,37 @@ class acf_field_random_color extends acf_field {
                     }
 
                     if (tinycolor(color).isDark()) {
-                        console.log(color + ' is too dark');
                         color = tinycolor(color).lighten(20).toString();
                         return color
                     } else {
                         return color
                     }
                 }
-                var saved = '<?php echo $field['value']; ?>';
-                if (saved == '#333333' || saved == '#333') {
-//                    $('#rn').attr('disabled', true);
-                } else {
-                    $('#rn').attr('disabled', false);
-                }
                 
+                // retrieve the saved value of the post
+                var saved = '<?php echo $field['value']; ?>';
+                
+                // initialize the spectrum
+                $('#spec').spectrum({
+                        color: '<?php echo $field['value']; ?>',
+                        showInput: true,
+                        allowEmpty: false,
+                        className: "piece-spectrum",
+                        showInitial: true,
+                        preferredFormat: "hex",
+                        chooseText: "Confirm",
+                        cancelText: "Dismiss",
+                        change: function(color) {
+                            var new_color = color.toHexString().toUpperCase();
+                            console.log(new_color);
+                        }
+                });
+                
+                $('.piece-spectrum').addClass('button');
+                $('.sp-choose').addClass('button');
+                
+                
+                // generate a new spectrum for new color
                 $('#rn-color .button').on('click', function(){
                     $('#spec').spectrum({
                         color: getRandomColor(),
@@ -162,54 +171,14 @@ class acf_field_random_color extends acf_field {
                         cancelText: "Dismiss",
                         change: function(color) {
                             var new_color = color.toHexString().toUpperCase();
-                            console.log(getRandomColor());
                             console.log(new_color);
-                            if (new_color == '#333333' || new_color == '#333') {
-//                    $('#rn').attr('disabled', true);
-                } else {
-                    $('#rn').attr('disabled', false);
-                }
-                            alert('woah7');
                         }
                     });
                     
                     $('.piece-spectrum').addClass('button');
-                    $('.piece-spectrum').css('height', '33px');
-                    $('.sp-container').css('height', 'auto');
-                    $('.sp-picker-container').css('border', 'none');
-                    $('.sp-replacer.sp-light.piece-spectrum.button > *').css('line-height', '26px');
-                    $('.sp-preview').css('margin-top', '5px');
-                });
-                
-                $('#spec').spectrum({
-                        color: '<?php echo $field['value']; ?>',
-                        showInput: true,
-                        allowEmpty: false,
-                        className: "piece-spectrum",
-                        showInitial: true,
-                        preferredFormat: "hex",
-                        chooseText: "Confirm",
-                        cancelText: "Dismiss",
-                        change: function(color) {
-                            var new_color = color.toHexString().toUpperCase();
-                            console.log(getRandomColor());
-                            console.log(new_color);
-                            if (new_color != '#333333' || new_color != '#333') {
-                                $('#rn').attr('disabled', true);
-                            } else {
-                                $('#rn').attr('disabled', false);
-                            }
-                            alert('woah');
-                        }
-                });
-                
-                $('.piece-spectrum').addClass('button');
-                $('.piece-spectrum').css('height', '33px');
-                $('.sp-container').css('height', 'auto');
-                $('.sp-picker-container').css('border', 'none');
-                $('.sp-replacer.sp-light.piece-spectrum.button > *').css('line-height', '26px');
-                $('.sp-preview').css('margin-top', '5px');
-            })(jQuery);
+                    $('.sp-choose').addClass('button');
+                });                
+           })(jQuery);
         </script>
 		<?php
 	}
@@ -238,42 +207,28 @@ class acf_field_random_color extends acf_field {
 		
 		
 		// register & include JS
-		wp_register_script( 'jquery', "https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js", false, null );
-		wp_enqueue_script('jquery');
+		wp_register_script( 'jquery-hosted', "https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js", false, null );
+		wp_enqueue_script('jquery-hosted');
+        
+		// wp_register_script( 'jquery-3.1.1', "{$url}assets/js/jquery-3.1.1.js", false, null );
+		// wp_enqueue_script('jquery-3.1.1');
+        
 		wp_register_script( 'tinycolor', "{$url}assets/js/tinycolor-min.js", array('acf-input'), $version );
 		wp_enqueue_script('tinycolor');
-		wp_register_script( 'acf-input-random_color', "{$url}assets/js/spectrum.js", array('acf-input'), $version );
-		wp_enqueue_script('acf-input-random_color');
+        
+		wp_register_script( 'spectrum', "{$url}assets/js/spectrum.js", array('acf-input'), $version );
+		wp_enqueue_script('spectrum');
+        
+		wp_register_script( 'input', "{$url}assets/js/input.js", array('acf-input'), $version );
+		wp_enqueue_script('input');
 		
 		
 		// register & include CSS
-		wp_register_style( 'acf-input-random_color', "{$url}assets/css/spectrum.css", array('acf-input'), $version );
-		wp_enqueue_style('acf-input-random_color');
-		
-	}
-	
-	
-	
-	/*
-	*  load_value()
-	*
-		*  This filter is applied to the $value after it is loaded from the db
-	*
-	*  @type	filter
-	*  @since	3.6
-	*  @date	23/01/13
-	*
-	*  @param	$value - the value found in the database
-	*  @param	$post_id - the $post_id from which the value was loaded
-	*  @param	$field - the field array holding all the field options
-	*
-	*  @return	$value - the value to be saved in the database
-	*/
-	
-	function load_value( $value, $post_id, $field )
-	{
-		// Note: This function can be removed if not used
-		return $value;
+		wp_register_style( 'spectrum', "{$url}assets/css/spectrum.css", array('acf-input'), $version );
+		wp_enqueue_style('spectrum');
+        
+		wp_register_style( 'input', "{$url}assets/css/input.css", array('acf-input'), $version );
+		wp_enqueue_style('input');		
 	}
 	
 	
@@ -297,89 +252,6 @@ class acf_field_random_color extends acf_field {
 	{
 		// Note: This function can be removed if not used
 		return $value;
-	}
-	
-	
-	/*
-	*  format_value()
-	*
-	*  This filter is applied to the $value after it is loaded from the db and before it is passed to the create_field action
-	*
-	*  @type	filter
-	*  @since	3.6
-	*  @date	23/01/13
-	*
-	*  @param	$value	- the value which was loaded from the database
-	*  @param	$post_id - the $post_id from which the value was loaded
-	*  @param	$field	- the field array holding all the field options
-	*
-	*  @return	$value	- the modified value
-	*/
-	
-	function format_value( $value, $post_id, $field )
-	{
-		// defaults?
-		/*
-		$field = array_merge($this->defaults, $field);
-		*/
-		
-		// perhaps use $field['preview_size'] to alter the $value?
-		
-		
-		// Note: This function can be removed if not used
-		return $value;
-	}
-	
-	
-	/*
-	*  format_value_for_api()
-	*
-	*  This filter is applied to the $value after it is loaded from the db and before it is passed back to the API functions such as the_field
-	*
-	*  @type	filter
-	*  @since	3.6
-	*  @date	23/01/13
-	*
-	*  @param	$value	- the value which was loaded from the database
-	*  @param	$post_id - the $post_id from which the value was loaded
-	*  @param	$field	- the field array holding all the field options
-	*
-	*  @return	$value	- the modified value
-	*/
-	
-	function format_value_for_api( $value, $post_id, $field )
-	{
-		// defaults?
-		/*
-		$field = array_merge($this->defaults, $field);
-		*/
-		
-		// perhaps use $field['preview_size'] to alter the $value?
-		
-		
-		// Note: This function can be removed if not used
-		return $value;
-	}
-	
-	
-	/*
-	*  load_field()
-	*
-	*  This filter is applied to the $field after it is loaded from the database
-	*
-	*  @type	filter
-	*  @since	3.6
-	*  @date	23/01/13
-	*
-	*  @param	$field - the field array holding all the field options
-	*
-	*  @return	$field - the field array holding all the field options
-	*/
-	
-	function load_field( $field )
-	{
-		// Note: This function can be removed if not used
-		return $field;
 	}
 	
 	
