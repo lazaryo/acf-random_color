@@ -110,14 +110,16 @@ class acf_field_random_color extends acf_field {
 		// create Field HTML
 		?>
 		<div id="rn-color" style="color: #F9F9F9">
-           <pre style="color:#333"><?php print_r($field); ?></pre>
+            <pre id="pre" style="color:#333"><?php print_r($field); ?></pre>
             <input id="spec" type="text">
-            <input name="<?php echo $field['name']; ?>" type="hidden" value="<?php echo $field['value']; ?>">
             <input id="rn" class="button" type="button" value="Random Color">
+            <input id="save-color" class="button" type="button" value="Save">
+            
+            <!-- storing the hex value for use -->
+            <input id="hidden" name="<?php echo $field['name']; ?>" type="hidden" value="<?php echo $field['value']; ?>">
 		</div>
 		<script type="text/javascript">
             (function($) {
-                
                 // generate a random color and return it
                 // add or remove charcters to further diversify the colors
                 function getRandomColor() {
@@ -148,18 +150,26 @@ class acf_field_random_color extends acf_field {
                         preferredFormat: "hex",
                         chooseText: "Confirm",
                         cancelText: "Dismiss",
+                        hide: function(color) {
+                            var new_color = color.toHexString().toUpperCase();
+                            $('#hidden').val(new_color);
+                            $('#save-color').hide();
+                            $('#rn').attr('disabled', false);
+                        },
                         change: function(color) {
                             var new_color = color.toHexString().toUpperCase();
                             console.log(new_color);
+                            $('#hidden').val(new_color);
+                            $('#save-color').hide();
+                            $('#rn').attr('disabled', false);
                         }
                 });
                 
                 $('.piece-spectrum').addClass('button');
                 $('.sp-choose').addClass('button');
                 
-                
                 // generate a new spectrum for new color
-                $('#rn-color .button').on('click', function(){
+                $('#rn-color #rn').on('click', function(){
                     $('#spec').spectrum({
                         color: getRandomColor(),
                         showInput: true,
@@ -169,16 +179,45 @@ class acf_field_random_color extends acf_field {
                         preferredFormat: "hex",
                         chooseText: "Confirm",
                         cancelText: "Dismiss",
+                        hide: function(color) {
+                            var new_color = color.toHexString().toUpperCase();
+                            $('#hidden').val(new_color);
+                            $('#save-color').hide();
+                            $('#rn').attr('disabled', false);
+                        },
                         change: function(color) {
                             var new_color = color.toHexString().toUpperCase();
                             console.log(new_color);
+                            $('#hidden').val(new_color);
+                            $('#save-color').hide();
+                            $('#rn').attr('disabled', false);
                         }
                     });
+                    $('#save-color').show();
                     
+                    // for mimicking styles of WP buttons
                     $('.piece-spectrum').addClass('button');
                     $('.sp-choose').addClass('button');
-                });                
-           })(jQuery);
+                });
+                
+                // save new color before updating field
+                $('#save-color').on('click', function(){
+                    var new_color = tinycolor($('.sp-preview-inner').css('background-color'));
+                    new_color = new_color.toHexString().toUpperCase();
+                    $('#hidden').val(new_color);
+                    $('#rn').attr('disabled', true);
+                    $(this).hide();
+                });
+                
+                // disabling random color button initially
+                var postColor = $('#hidden').val();
+                var defaultColor = '<?php echo $field['default_value']; ?>';
+                if (postColor == defaultColor || postColor == '#333') {
+                    $('#rn').attr('disabled', false);
+                } else {
+                    $('#rn').attr('disabled', true);
+                }
+            })(jQuery);
         </script>
 		<?php
 	}
@@ -207,75 +246,29 @@ class acf_field_random_color extends acf_field {
 		
 		
 		// register & include JS
-		wp_register_script( 'jquery-hosted', "https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js", false, null );
-		wp_enqueue_script('jquery-hosted');
+		wp_register_script( 'jquery', "https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js", false, null );
+		wp_enqueue_script('jquery');
         
 		// wp_register_script( 'jquery-3.1.1', "{$url}assets/js/jquery-3.1.1.js", false, null );
 		// wp_enqueue_script('jquery-3.1.1');
         
 		wp_register_script( 'tinycolor', "{$url}assets/js/tinycolor-min.js", array('acf-input'), $version );
 		wp_enqueue_script('tinycolor');
-        
+
 		wp_register_script( 'spectrum', "{$url}assets/js/spectrum.js", array('acf-input'), $version );
 		wp_enqueue_script('spectrum');
         
-		wp_register_script( 'input', "{$url}assets/js/input.js", array('acf-input'), $version );
-		wp_enqueue_script('input');
+		wp_register_script( 'input-script', "{$url}assets/js/input.js", array('acf-input'), $version );
+		wp_enqueue_script('input-script');
 		
 		
 		// register & include CSS
 		wp_register_style( 'spectrum', "{$url}assets/css/spectrum.css", array('acf-input'), $version );
 		wp_enqueue_style('spectrum');
-        
-		wp_register_style( 'input', "{$url}assets/css/input.css", array('acf-input'), $version );
-		wp_enqueue_style('input');		
-	}
-	
-	
-	/*
-	*  update_value()
-	*
-	*  This filter is applied to the $value before it is updated in the db
-	*
-	*  @type	filter
-	*  @since	3.6
-	*  @date	23/01/13
-	*
-	*  @param	$value - the value which will be saved in the database
-	*  @param	$post_id - the $post_id of which the value will be saved
-	*  @param	$field - the field array holding all the field options
-	*
-	*  @return	$value - the modified value
-	*/
-	
-	function update_value( $value, $post_id, $field )
-	{
-		// Note: This function can be removed if not used
-		return $value;
-	}
-	
-	
-	/*
-	*  update_field()
-	*
-	*  This filter is applied to the $field before it is saved to the database
-	*
-	*  @type	filter
-	*  @since	3.6
-	*  @date	23/01/13
-	*
-	*  @param	$field - the field array holding all the field options
-	*  @param	$post_id - the field group ID (post_type = acf)
-	*
-	*  @return	$field - the modified field
-	*/
 
-	function update_field( $field, $post_id )
-	{
-		// Note: This function can be removed if not used
-		return $field;
+		wp_register_style( 'input-styling', "{$url}assets/css/input.css", array('acf-input'), $version );
+		wp_enqueue_style('input-styling');		
 	}
-
 }
 
 

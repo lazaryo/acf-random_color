@@ -21,3 +21,8 @@
 #pre {
     display: none;
 }
+
+#save-color {
+    height: 33px;
+    display: none;
+}
