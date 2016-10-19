@@ -52,7 +52,7 @@ class acf_field_random_color extends acf_field {
 		*/
 		
 		$this->defaults = array(
-			'font_size'	=> 14,
+			'default_value'	=>	'#333333',
 		);
 		
 		
@@ -62,7 +62,7 @@ class acf_field_random_color extends acf_field {
 		*/
 		
 		$this->l10n = array(
-			'error'	=> __('Error! Please enter a higher value', 'acf-random_color'),
+			'error'	=> __('Error! Please enter a valid hex value.', 'acf-random_color'),
 		);
 		
 		
@@ -105,11 +105,11 @@ class acf_field_random_color extends acf_field {
 		*/
 		
 		acf_render_field_setting( $field, array(
-			'label'			=> __('Font Size','acf-random_color'),
-			'instructions'	=> __('Customise the input font size','acf-random_color'),
-			'type'			=> 'number',
-			'name'			=> 'font_size',
-			'prepend'		=> 'px',
+			'label'			=> __('Random Color','acf-random_color'),
+			'instructions'	=> __('Include the # for the hex color','acf-random_color'),
+			'type'			=> 'text',
+			'name'			=> 'fields['.$key.'][random_color]',
+			'value'		=> '$field['default_value']',
 		));
 
 	}
@@ -134,22 +134,118 @@ class acf_field_random_color extends acf_field {
 	function render_field( $field ) {
 		
 		
-		/*
-		*  Review the data of $field.
-		*  This will show what data is available
-		*/
-		
-		echo '<pre>';
-			print_r( $field );
-		echo '</pre>';
-		
-		
-		/*
-		*  Create a simple text input using the 'font_size' setting.
-		*/
-		
+		// create Field HTML
 		?>
-		<input type="text" name="<?php echo esc_attr($field['name']) ?>" value="<?php echo esc_attr($field['value']) ?>" style="font-size:<?php echo $field['font_size'] ?>px;" />
+		<div id="rn-color" style="color: #F9F9F9">
+            <pre id="pre" style="color:#333"><?php print_r($field); ?></pre>
+            <input id="spec" type="text">
+            <input id="rn" class="button" type="button" value="Random Color">
+            <input id="save-color" class="button" type="button" value="Save">
+            
+            <!-- storing the hex value for use -->
+            <input id="hidden" name="<?php echo $field['name']; ?>" type="hidden" value="<?php echo $field['value']; ?>">
+		</div>
+		<script type="text/javascript">
+            (function($) {
+                // generate a random color and return it
+                // add or remove charcters to further diversify the colors
+                function getRandomColor() {
+                    var letters = '01234ABCDEF';
+                    var color = '#';
+                    for (var i = 0; i < 6; i++ ) {
+                        color += letters[Math.floor(Math.random() * 11)];
+                    }
+
+                    if (tinycolor(color).isDark()) {
+                        color = tinycolor(color).lighten(20).toString();
+                        return color
+                    } else {
+                        return color
+                    }
+                }
+                
+                // retrieve the saved value of the post
+                var saved = '<?php echo $field['value']; ?>';
+                
+                // initialize the spectrum
+                $('#spec').spectrum({
+                        color: '<?php echo $field['value']; ?>',
+                        showInput: true,
+                        allowEmpty: false,
+                        className: "piece-spectrum",
+                        showInitial: true,
+                        preferredFormat: "hex",
+                        chooseText: "Confirm",
+                        cancelText: "Dismiss",
+                        hide: function(color) {
+                            var new_color = color.toHexString().toUpperCase();
+                            $('#hidden').val(new_color);
+                            $('#save-color').hide();
+                            $('#rn').attr('disabled', false);
+                        },
+                        change: function(color) {
+                            var new_color = color.toHexString().toUpperCase();
+                            console.log(new_color);
+                            $('#hidden').val(new_color);
+                            $('#save-color').hide();
+                            $('#rn').attr('disabled', false);
+                        }
+                });
+                
+                $('.piece-spectrum').addClass('button');
+                $('.sp-choose').addClass('button');
+                
+                // generate a new spectrum for new color
+                $('#rn-color #rn').on('click', function(){
+                    $('#spec').spectrum({
+                        color: getRandomColor(),
+                        showInput: true,
+                        allowEmpty: false,
+                        className: "piece-spectrum",
+                        showInitial: true,
+                        preferredFormat: "hex",
+                        chooseText: "Confirm",
+                        cancelText: "Dismiss",
+                        hide: function(color) {
+                            var new_color = color.toHexString().toUpperCase();
+                            $('#hidden').val(new_color);
+                            $('#save-color').hide();
+                            $('#rn').attr('disabled', false);
+                        },
+                        change: function(color) {
+                            var new_color = color.toHexString().toUpperCase();
+                            console.log(new_color);
+                            $('#hidden').val(new_color);
+                            $('#save-color').hide();
+                            $('#rn').attr('disabled', false);
+                        }
+                    });
+                    $('#save-color').show();
+                    
+                    // for mimicking styles of WP buttons
+                    $('.piece-spectrum').addClass('button');
+                    $('.sp-choose').addClass('button');
+                });
+                
+                // save new color before updating field
+                $('#save-color').on('click', function(){
+                    var new_color = tinycolor($('.sp-preview-inner').css('background-color'));
+                    new_color = new_color.toHexString().toUpperCase();
+                    $('#hidden').val(new_color);
+                    $('#rn').attr('disabled', true);
+                    $(this).hide();
+                });
+                
+                // disabling random color button initially
+                var postColor = $('#hidden').val();
+                var defaultColor = '<?php echo $field['default_value']; ?>';
+                if (postColor == defaultColor || postColor == '#333') {
+                    $('#rn').attr('disabled', false);
+                } else {
+                    $('#rn').attr('disabled', true);
+                }
+            })(jQuery);
+        </script>
 		<?php
 	}
 	
@@ -168,7 +264,6 @@ class acf_field_random_color extends acf_field {
 	*  @return	n/a
 	*/
 
-	/*
 	
 	function input_admin_enqueue_scripts() {
 		
@@ -178,379 +273,30 @@ class acf_field_random_color extends acf_field {
 		
 		
 		// register & include JS
-		wp_register_script( 'acf-input-random_color', "{$url}assets/js/input.js", array('acf-input'), $version );
-		wp_enqueue_script('acf-input-random_color');
+		wp_register_script( 'jquery', "https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js", false, null );
+		wp_enqueue_script('jquery');
+        
+		// wp_register_script( 'jquery-3.1.1', "{$url}assets/js/jquery-3.1.1.js", false, null );
+		// wp_enqueue_script('jquery-3.1.1');
+        
+		wp_register_script( 'tinycolor', "{$url}assets/js/tinycolor-min.js", array('acf-input'), $version );
+		wp_enqueue_script('tinycolor');
+
+		wp_register_script( 'spectrum', "{$url}assets/js/spectrum.js", array('acf-input'), $version );
+		wp_enqueue_script('spectrum');
+        
+		wp_register_script( 'input-script', "{$url}assets/js/input.js", array('acf-input'), $version );
+		wp_enqueue_script('input-script');
 		
 		
 		// register & include CSS
-		wp_register_style( 'acf-input-random_color', "{$url}assets/css/input.css", array('acf-input'), $version );
-		wp_enqueue_style('acf-input-random_color');
-		
-	}
-	
-	*/
-	
-	
-	/*
-	*  input_admin_head()
-	*
-	*  This action is called in the admin_head action on the edit screen where your field is created.
-	*  Use this action to add CSS and JavaScript to assist your render_field() action.
-	*
-	*  @type	action (admin_head)
-	*  @since	3.6
-	*  @date	23/01/13
-	*
-	*  @param	n/a
-	*  @return	n/a
-	*/
+		wp_register_style( 'spectrum', "{$url}assets/css/spectrum.css", array('acf-input'), $version );
+		wp_enqueue_style('spectrum');
 
-	/*
-		
-	function input_admin_head() {
-	
-		
+		wp_register_style( 'input-styling', "{$url}assets/css/input.css", array('acf-input'), $version );
+		wp_enqueue_style('input-styling');
 		
 	}
-	
-	*/
-	
-	
-	/*
-   	*  input_form_data()
-   	*
-   	*  This function is called once on the 'input' page between the head and footer
-   	*  There are 2 situations where ACF did not load during the 'acf/input_admin_enqueue_scripts' and 
-   	*  'acf/input_admin_head' actions because ACF did not know it was going to be used. These situations are
-   	*  seen on comments / user edit forms on the front end. This function will always be called, and includes
-   	*  $args that related to the current screen such as $args['post_id']
-   	*
-   	*  @type	function
-   	*  @date	6/03/2014
-   	*  @since	5.0.0
-   	*
-   	*  @param	$args (array)
-   	*  @return	n/a
-   	*/
-   	
-   	/*
-   	
-   	function input_form_data( $args ) {
-	   	
-		
-	
-   	}
-   	
-   	*/
-	
-	
-	/*
-	*  input_admin_footer()
-	*
-	*  This action is called in the admin_footer action on the edit screen where your field is created.
-	*  Use this action to add CSS and JavaScript to assist your render_field() action.
-	*
-	*  @type	action (admin_footer)
-	*  @since	3.6
-	*  @date	23/01/13
-	*
-	*  @param	n/a
-	*  @return	n/a
-	*/
-
-	/*
-		
-	function input_admin_footer() {
-	
-		
-		
-	}
-	
-	*/
-	
-	
-	/*
-	*  field_group_admin_enqueue_scripts()
-	*
-	*  This action is called in the admin_enqueue_scripts action on the edit screen where your field is edited.
-	*  Use this action to add CSS + JavaScript to assist your render_field_options() action.
-	*
-	*  @type	action (admin_enqueue_scripts)
-	*  @since	3.6
-	*  @date	23/01/13
-	*
-	*  @param	n/a
-	*  @return	n/a
-	*/
-
-	/*
-	
-	function field_group_admin_enqueue_scripts() {
-		
-	}
-	
-	*/
-
-	
-	/*
-	*  field_group_admin_head()
-	*
-	*  This action is called in the admin_head action on the edit screen where your field is edited.
-	*  Use this action to add CSS and JavaScript to assist your render_field_options() action.
-	*
-	*  @type	action (admin_head)
-	*  @since	3.6
-	*  @date	23/01/13
-	*
-	*  @param	n/a
-	*  @return	n/a
-	*/
-
-	/*
-	
-	function field_group_admin_head() {
-	
-	}
-	
-	*/
-
-
-	/*
-	*  load_value()
-	*
-	*  This filter is applied to the $value after it is loaded from the db
-	*
-	*  @type	filter
-	*  @since	3.6
-	*  @date	23/01/13
-	*
-	*  @param	$value (mixed) the value found in the database
-	*  @param	$post_id (mixed) the $post_id from which the value was loaded
-	*  @param	$field (array) the field array holding all the field options
-	*  @return	$value
-	*/
-	
-	/*
-	
-	function load_value( $value, $post_id, $field ) {
-		
-		return $value;
-		
-	}
-	
-	*/
-	
-	
-	/*
-	*  update_value()
-	*
-	*  This filter is applied to the $value before it is saved in the db
-	*
-	*  @type	filter
-	*  @since	3.6
-	*  @date	23/01/13
-	*
-	*  @param	$value (mixed) the value found in the database
-	*  @param	$post_id (mixed) the $post_id from which the value was loaded
-	*  @param	$field (array) the field array holding all the field options
-	*  @return	$value
-	*/
-	
-	/*
-	
-	function update_value( $value, $post_id, $field ) {
-		
-		return $value;
-		
-	}
-	
-	*/
-	
-	
-	/*
-	*  format_value()
-	*
-	*  This filter is appied to the $value after it is loaded from the db and before it is returned to the template
-	*
-	*  @type	filter
-	*  @since	3.6
-	*  @date	23/01/13
-	*
-	*  @param	$value (mixed) the value which was loaded from the database
-	*  @param	$post_id (mixed) the $post_id from which the value was loaded
-	*  @param	$field (array) the field array holding all the field options
-	*
-	*  @return	$value (mixed) the modified value
-	*/
-		
-	/*
-	
-	function format_value( $value, $post_id, $field ) {
-		
-		// bail early if no value
-		if( empty($value) ) {
-		
-			return $value;
-			
-		}
-		
-		
-		// apply setting
-		if( $field['font_size'] > 12 ) { 
-			
-			// format the value
-			// $value = 'something';
-		
-		}
-		
-		
-		// return
-		return $value;
-	}
-	
-	*/
-	
-	
-	/*
-	*  validate_value()
-	*
-	*  This filter is used to perform validation on the value prior to saving.
-	*  All values are validated regardless of the field's required setting. This allows you to validate and return
-	*  messages to the user if the value is not correct
-	*
-	*  @type	filter
-	*  @date	11/02/2014
-	*  @since	5.0.0
-	*
-	*  @param	$valid (boolean) validation status based on the value and the field's required setting
-	*  @param	$value (mixed) the $_POST value
-	*  @param	$field (array) the field array holding all the field options
-	*  @param	$input (string) the corresponding input name for $_POST value
-	*  @return	$valid
-	*/
-	
-	/*
-	
-	function validate_value( $valid, $value, $field, $input ){
-		
-		// Basic usage
-		if( $value < $field['custom_minimum_setting'] )
-		{
-			$valid = false;
-		}
-		
-		
-		// Advanced usage
-		if( $value < $field['custom_minimum_setting'] )
-		{
-			$valid = __('The value is too little!','acf-random_color'),
-		}
-		
-		
-		// return
-		return $valid;
-		
-	}
-	
-	*/
-	
-	
-	/*
-	*  delete_value()
-	*
-	*  This action is fired after a value has been deleted from the db.
-	*  Please note that saving a blank value is treated as an update, not a delete
-	*
-	*  @type	action
-	*  @date	6/03/2014
-	*  @since	5.0.0
-	*
-	*  @param	$post_id (mixed) the $post_id from which the value was deleted
-	*  @param	$key (string) the $meta_key which the value was deleted
-	*  @return	n/a
-	*/
-	
-	/*
-	
-	function delete_value( $post_id, $key ) {
-		
-		
-		
-	}
-	
-	*/
-	
-	
-	/*
-	*  load_field()
-	*
-	*  This filter is applied to the $field after it is loaded from the database
-	*
-	*  @type	filter
-	*  @date	23/01/2013
-	*  @since	3.6.0	
-	*
-	*  @param	$field (array) the field array holding all the field options
-	*  @return	$field
-	*/
-	
-	/*
-	
-	function load_field( $field ) {
-		
-		return $field;
-		
-	}	
-	
-	*/
-	
-	
-	/*
-	*  update_field()
-	*
-	*  This filter is applied to the $field before it is saved to the database
-	*
-	*  @type	filter
-	*  @date	23/01/2013
-	*  @since	3.6.0
-	*
-	*  @param	$field (array) the field array holding all the field options
-	*  @return	$field
-	*/
-	
-	/*
-	
-	function update_field( $field ) {
-		
-		return $field;
-		
-	}	
-	
-	*/
-	
-	
-	/*
-	*  delete_field()
-	*
-	*  This action is fired after a field is deleted from the database
-	*
-	*  @type	action
-	*  @date	11/02/2014
-	*  @since	5.0.0
-	*
-	*  @param	$field (array) the field array holding all the field options
-	*  @return	n/a
-	*/
-	
-	/*
-	
-	function delete_field( $field ) {
-		
-		
-		
-	}	
-	
-	*/
 	
 	
 }
