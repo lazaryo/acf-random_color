@@ -44,7 +44,7 @@ class acf_field_random_color extends acf_field {
 		*  category (string) basic | content | choice | relational | jquery | layout | CUSTOM GROUP NAME
 		*/
 		
-		$this->category = 'basic';
+		$this->category = 'jquery';
 		
 		
 		/*
@@ -109,7 +109,7 @@ class acf_field_random_color extends acf_field {
 			'instructions'	=> __('Include the # for the hex color','acf-random_color'),
 			'type'			=> 'text',
 			'name'			=> 'fields['.$key.'][random_color]',
-			'value'		=> '$field['default_value']',
+			'value'		=> $field['default_value']
 		));
 
 	}
